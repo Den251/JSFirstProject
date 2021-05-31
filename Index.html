@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        
+        <style type="text/css">
+            canvas { border: 1px solid green;
+                    display: block;
+                    margin: 0 auto;
+                }
+            h3 {color: green;
+                text-align: center;
+
+                }
+            button {
+                background-color: #4CAF50;
+                border: none;
+                color: white;
+                padding: 15px 32px;
+                text-align: center;
+                text-decoration: none;
+                display: inline-block;
+                font-size: 16px;
+                margin: 4px 2px;
+                cursor: pointer;
+            }
+            .button-group{
+                margin: auto;
+                display: flex;
+                flex-direction: row;
+                justify-content: center;
+            }
+}
+          </style>
+    </head>
+    <body>
+        <div class="main">
+            <div class="contentBlock">
+                <h3>Build your own parallelogram</h3>
+                <canvas id ="canvas" width="600" height="500"></canvas>
+            </div>
+            <div class="button-group">
+                <button onclick="Reset()">Reset</button>
+                <button onclick="About()">About</button> 
+            </div>
+                
+            
+            </div>
+
+        
+          
+
+
+    <script type="text/javascript">
+        class Point {
+    constructor(x, y) {
+      this.x = x;
+      this.y = y;
+    }
+    
+  }
+let canvas = document.getElementById("canvas");
+let context = canvas.getContext("2d");
+context.font = "11px Verdana";
+
+let cw = canvas.width;
+let ch = canvas.height;
+let draggable = false;
+let difX =0;
+let difY =0;
+
+let pointa = new Path2D();
+let pointb = new Path2D();
+let pointc = new Path2D();
+let pointd = new Path2D();
+
+let circle = new Path2D();
+let points = [];
+let isDone = false;
+let clicks = 0;
+let draggablePoint;
+
+
+let mover = function(event) {   
+
+    if(draggable){
+        
+        difX = event.offsetX -points[draggablePoint].x;
+        difY = event.offsetY -points[draggablePoint].y;
+        points[draggablePoint]={x:(points[draggablePoint].x+difX), y:(points[draggablePoint].y+difY)}
+        GetMassCenterAndFourthPoint(points);
+        drawParallelogramAndCircle();        
+    }        
+}
+  
+
+canvas.addEventListener('mousedown', function(event) {    
+    
+    if (context.isPointInPath(pointa, event.offsetX, event.offsetY)){
+        
+        draggable = true;
+        draggablePoint=0;            
+    }
+    if (context.isPointInPath(pointb, event.offsetX, event.offsetY)){
+        
+        draggable = true;
+        draggablePoint=1;        
+    }
+    if (context.isPointInPath(pointc, event.offsetX, event.offsetY)){
+        
+        draggable = true;
+        draggablePoint=2;        
+    }
+    if (context.isPointInPath(pointd, event.offsetX, event.offsetY)){
+        
+        draggable = true;
+        draggablePoint=3;        
+    }
+    
+});
+canvas.addEventListener('mouseup', function(event) {
+    
+    draggable = false;
+});
+
+
+
+let clicker = function(e) {
+
+    clicks++;
+    //drawing of dots when you choose points
+    if(!isDone){
+           
+
+        const point = new Point(e.offsetX, e.offsetY);
+        points.push(point);
+        context.beginPath();
+        context.arc(point.x, point.y, 11, 0, 2 * Math.PI);
+        context.fillStyle = "red";
+        context.fill();
+                
+        if(clicks===3){
+
+            isDone=true;
+            GetMassCenterAndFourthPoint(points);
+            circle.arc(points[0].x, points[0].y, 11, 0, 2 * Math.PI);
+            circle.arc(points[1].x, points[1].y, 11, 0, 2 * Math.PI);
+            circle.arc(points[2].x, points[2].y, 11, 0, 2 * Math.PI);
+            circle.arc(points[3].x, points[3].y, 11, 0, 2 * Math.PI);
+            context.fill(circle);
+            drawParallelogramAndCircle();            
+        }       
+       
+
+    }
+    if(isDone){
+
+        canvas.removeEventListener("click", clicker, false);
+        canvas.addEventListener('mousemove', mover, false); 
+               
+    }   
+  
+}
+canvas.addEventListener("click", clicker, false);
+
+//calculating of mass center and 4 point
+function GetMassCenterAndFourthPoint(knownpoints){
+
+    const point4X = knownpoints[2].x-knownpoints[1].x+knownpoints[0].x;
+    const point4Y = knownpoints[2].y-knownpoints[1].y+knownpoints[0].y;
+    context.beginPath();
+    context.arc(point4X, point4Y, 11, 0, 2 * Math.PI);
+    context.fillStyle = "red";
+    context.fill();
+    if(points.length>3){
+
+        points.pop();
+        points.pop();
+    }
+    points.push(new Point(point4X, point4Y));
+    const massCenterX = (knownpoints[1].x+knownpoints[3].x)/2;
+    const massCenterY = (knownpoints[1].y+knownpoints[3].y)/2; 
+    points.push(new Point(massCenterX, massCenterY));
+}
+
+//drawing of shapse
+function drawParallelogramAndCircle(){
+
+    context.clearRect(0, 0, cw, ch);
+    context.beginPath();
+    context.moveTo(points[0].x, points[0].y);
+    for(let i=1;i<points.length-1;i++){
+        
+        context.lineTo(points[i].x, points[i].y);        
+        if(i===3){
+
+            context.lineTo(points[0].x, points[0].y);
+        }
+        
+    }
+    context.strokeStyle = "blue";
+    context.closePath();
+    context.stroke();
+    pointa.arc(points[0].x, points[0].y, 11, 0, 2 * Math.PI);
+    pointb.arc(points[1].x, points[1].y, 11, 0, 2 * Math.PI);
+    pointc.arc(points[2].x, points[2].y, 11, 0, 2 * Math.PI);
+    pointd.arc(points[3].x, points[3].y, 11, 0, 2 * Math.PI);
+    
+    for(let i=0;i<points.length-1;i++){
+
+        context.beginPath();
+        context.arc(points[i].x, points[i].y, 11, 0, 2 * Math.PI);        
+        context.fillStyle = "red";
+        context.fill();
+        context.fillStyle = "black";
+        context.fillText(points[i].x+":"+points[i].y, points[i].x+10, points[i].y+10);        
+    }      
+
+// calculating of square
+    let ba = {x: (points[0].x - points[1].x), y:(points[0].y - points[1].y)};
+    let bc = {x: (points[2].x - points[1].x), y:(points[2].y - points[1].y)};
+    let b = {x:0, y:0, z:((ba.x*bc.y)-(ba.y*bc.x))};    
+
+    let square = Math.sqrt(Math.pow(b.x,2)+ Math.pow(b.y,2)+Math.pow(b.z,2));
+    context.fillText(square, points[4].x, points[4].y);
+
+    context.beginPath();    
+    context.arc(points[4].x, points[4].y, Math.sqrt(square/Math.PI), 0, 2 * Math.PI);
+    context.strokeStyle = "yellow";
+    context.closePath();
+    context.stroke();        
+}
+
+function Reset(){
+
+    context.clearRect(0, 0, cw, ch);
+    isDone=false;
+    draggable=false;
+    clicks=0;
+    points=[];
+    canvas.addEventListener("click", clicker, false);
+}
+
+function About(){
+
+    alert("1. Choose 3 points by clicking the mouse to build parallelogram and circle.\n2. After the shapes is build, you can drag points to change them. You can see the coordinates of points and the square of parallelogram and circle.\n\nThis software was made by Denys Plotko. Contact the author: denis231251@gmail.com");
+}
+    </script>
+
+    </body>
+</html>
+
+
